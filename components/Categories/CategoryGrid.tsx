@@ -43,65 +43,83 @@ export default function CategoryGrid() {
             />
         );
     
-    if (filtered.length === 0) {
-        return (
-            <section className="py-section">
-                <Container>
-                    <div className="mb-12">
-                        <input
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search category..."
-                            className="
-                                h-14
-                                w-full
-                                rounded-xl
-                                border
-                                px-5
-                                outline-none
-                                focus:border-primary
-                            "
-                        />
-                    </div>
-
-                    <EmptyState
-                        title="No Category Found"
-                        description={`No category matches "${search}". Please try another keyword.`}
-                    />
-                </Container>
-            </section>
-        );
-    }
 
     return (
 
-        <section className="py-section">
+        <section className="py-2">
 
             <Container>
 
-                <div className="mb-12">
+                 <div
+                    className="
+                        mb-10
+                        flex
+                        flex-col
+                        gap-4
+                        sm:flex-row
+                        sm:items-center
+                        sm:justify-between
+                    "
+                >
 
-                    <input
-                        value={search}
-                        onChange={(e) =>
-                            setSearch(e.target.value)
-                        }
-                        placeholder="Search category..."
-                        className="
-                            h-14
-                            w-full
-                            rounded-xl
-                            border
-                            px-5
-                            outline-none
+                    <div>
+                        <h2 className="text-2xl font-bold">
+                            All Categories
+                        </h2>
 
-                            focus:border-primary
-                        "
-                    />
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {categories.length}{" "}
+                            {categories.length === 1
+                                ? "category"
+                                : "categories"}
+                        </p>
+                    </div>
+
+
+                    <div className="relative w-full sm:max-w-sm">
+
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search categories..."
+                            className="
+                                h-12
+                                w-full max-w-md
+                                rounded-xl
+                                border
+                                border-[var(--color-primary)]
+                                bg-background
+                                px-4
+                                outline-none
+                                transition-all
+
+                                placeholder:text-muted-foreground
+
+                                focus:border-primary border-[var(--color-primary-dark)]
+                                focus:ring-2
+                                focus:ring-primary/10
+                            "
+                        />
+
+                    </div>
 
                 </div>
 
-                <div
+
+                {filtered.length === 0 ? (
+                    <section className="py-section">
+                        <Container>
+                            <EmptyState
+                                title="No Category Found"
+                                description={`No category matches "${search}". Please try another keyword.`}
+                            />
+                        </Container>
+                    </section>
+                ):(
+                    <div
                     className="
                         grid
                         gap-8
@@ -123,7 +141,9 @@ export default function CategoryGrid() {
 
                     ))}
 
-                </div>
+                    </div>
+                )}
+                
 
             </Container>
 

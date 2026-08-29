@@ -1,34 +1,44 @@
-"use client";
+import { useQuery } from "@tanstack/react-query";
 
-import { useEffect, useState } from "react";
+import {
+    getBrands,
+    getBrandBySlug,
+} from "@/services/brandService";
 
-import { Brand } from "@/types/brand";
-import { getBrands } from "@/services/brandService";
 
-export default function useBrands() {
-    const [brands, setBrands] = useState<Brand[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+export function useBrands() {
 
-    useEffect(() => {
-        async function fetchBrands() {
-            try {
-                const data = await getBrands();
-                setBrands(data);
-            } catch (err) {
-                console.error(err);
-                setError("Unable to load brands.");
-            } finally {
-                setLoading(false);
-            }
-        }
+    return useQuery({
 
-        fetchBrands();
-    }, []);
+        queryKey: ["brands"],
 
-    return {
-        brands,
-        loading,
-        error,
-    };
+        queryFn: getBrands,
+
+        staleTime: 5 * 60 * 1000,
+
+    });
+
 }
+
+
+export function useBrandBySlug(
+    slug: string
+) {
+
+    return useQuery({
+
+        queryKey: ["brand", slug],
+
+        queryFn: () =>
+            getBrandBySlug(slug),
+
+        enabled: !!slug,
+
+        staleTime: 5 * 60 * 1000,
+
+    });
+
+}
+
+
+export default useBrands;

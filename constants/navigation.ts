@@ -16,8 +16,8 @@ export const NAV_LINKS = [
         href: "/brands",
     },
     {
-        label: "Blog",
-        href: "/blog",
+        label: "Services",
+        href: "/services",
     },
     {
         label: "About",

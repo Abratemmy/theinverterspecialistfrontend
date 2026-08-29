@@ -9,7 +9,7 @@ type ImageType =
     | "brand"
     | "blog"
     | "avatar"
-    | "default";
+    | "default"
 
 interface ImageWithFallbackProps
     extends Omit<ImageProps, "src"> {
@@ -19,8 +19,8 @@ interface ImageWithFallbackProps
 
 const FALLBACK_IMAGES: Record<ImageType, string> = {
     category: "/images/placeholders/category-placeholder.png",
-    product: "/images/placeholders/product-placeholder.png",
-    brand: "/images/placeholders/product-placeholder.png",
+    product: "/images/placeholders/products.jpg",
+    brand: "/images/placeholders/brands.png",
     blog: "/images/placeholders/blog-placeholder.png",
     avatar: "/images/placeholders/avatar-placeholder.png",
     default: "/images/placeholders/default-placeholder.png",

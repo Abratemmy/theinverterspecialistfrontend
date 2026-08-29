@@ -1,24 +1,120 @@
 import api from "./api";
-import { CategoryResponse } from "@/types/category";
 
-export const categoryService = {
+import {
+    Category,
+    CategoryResponse,
+    CategorySingleResponse,
+} from "@/types/category";
 
-    getCategories: async () => {
 
-        const { data } =
-            await api.get<CategoryResponse>("/categories");
+// ==========================================================
+// GET ALL CATEGORIES
+// ==========================================================
 
-        return data;
+export const getCategories = async (): Promise<CategoryResponse> => {
 
-    },
+    const { data } =
+        await api.get<CategoryResponse>(
+            "/categories"
+        );
 
-    getCategoryBySlug: async (slug: string) => {
+    return data;
 
-        const { data } =
-            await api.get(`/categories/${slug}`);
+};
 
-        return data;
 
-    },
+// ==========================================================
+// GET CATEGORY BY SLUG
+// ==========================================================
+
+export const getCategoryBySlug = async (
+    slug: string
+): Promise<Category> => {
+
+    const { data } =
+        await api.get<CategorySingleResponse>(
+            `/categories/${slug}`
+        );
+
+    return data.data;
+
+};
+
+
+// ==========================================================
+// CREATE CATEGORY
+// ==========================================================
+
+export interface CreateCategoryData {
+
+    name: string;
+
+    description?: string;
+
+    image?: string;
+
+}
+
+
+export const createCategory = async (
+    data: CreateCategoryData
+) => {
+
+    const response =
+        await api.post(
+            "/admin/categories",
+            data
+        );
+
+    return response.data;
+
+};
+
+
+// ==========================================================
+// UPDATE CATEGORY
+// ==========================================================
+
+export interface UpdateCategoryData {
+
+    name: string;
+
+    description?: string;
+
+    image?: string;
+
+}
+
+
+export const updateCategory = async (
+    id: number,
+    data: UpdateCategoryData
+) => {
+
+    const response =
+        await api.put(
+            `/admin/categories/${id}`,
+            data
+        );
+
+    return response.data;
+
+};
+
+
+// ==========================================================
+// DELETE CATEGORY
+// ==========================================================
+
+export const deleteCategory = async (
+    id: number
+) => {
+
+    const response =
+        await api.delete(
+            `/admin/categories/${id}`
+        );
+
+    return response.data;
 
 };

@@ -38,6 +38,7 @@ export default function SocialLinks() {
                         rel="noopener noreferrer"
                         aria-label={social.name}
                         className="
+                        link
                             group
                             flex
                             h-11
@@ -65,6 +66,7 @@ export default function SocialLinks() {
                                 transition-transform
                                 duration-300
                                 group-hover:scale-110
+                                icon
                             "
                         />
                     </Link>

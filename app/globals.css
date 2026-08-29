@@ -2,6 +2,19 @@
 @import "tailwindcss/preflight";
 @import "tailwindcss/utilities";
 
+
+/* ==========================================================
+   FONTS
+========================================================== */
+
+@theme {
+
+    --font-inter-custom: var(--font-inter);
+
+    --font-poppins-custom: var(--font-poppins);
+
+}
+
 /* ==========================================================
    CSS VARIABLES
 ========================================================== */
@@ -9,9 +22,10 @@
 :root {
 
   /* Brand */
-
+  
   --color-primary: #6f9736;
-  --color-primary-dark: #0d612a;
+  --bgcolor-primary: #6f97365b;
+  --color-primary-dark: #19482a;
   --color-primary-light: #E9F8EE;
   --color-secondary: #FFC107;
 
@@ -20,8 +34,8 @@
   --color-background: #F8FAFC;
   --color-card: #FFFFFF;
 
-  --color-text: #242f3e;
-  --color-text-light: #6B7280;
+  --color-text: #1b2026;
+  --color-text-light: #93969a;
 
   --color-border: #E5E7EB;
 
@@ -113,7 +127,9 @@ h3{
 /* ==========================================================
    BUTTONS
 ========================================================== */
-
+button{
+  cursor: pointer
+}
 .btn-primary {
   background: var(--color-primary);
   color: white;
@@ -155,4 +171,70 @@ h3{
 
 .no-scrollbar::-webkit-scrollbar {
     display: none;
+}
+
+/* =========================================================
+   ADMIN ORDER STATUS SELECT
+========================================================= */
+
+.select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    border: 1px solid hsl(var(--border));
+    border-radius: 10px;
+
+    background-color: transparent;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    outline: none;
+    border: 1px solid var(--color-primary);
+    padding: 5px 8px;
+    text-align: center;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+
+/* Focus */
+
+.select:focus {
+    border-color: hsl(var(--primary));
+
+    box-shadow:
+        0 0 0 3px
+        hsl(var(--primary) / 0.1);
+}
+
+
+/* Options */
+
+.select option {
+    padding: 10px;
+    font-size: 14px;
+    background: white;
+    color: #111827;
+}
+.select option:checked {
+    background: #f3f4f6;
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+.topBarSocialLinks{
+  .link{
+    width: 24px;
+    height: 24px;
+    .icon{
+      width: 12px;
+    }
+  }
 }

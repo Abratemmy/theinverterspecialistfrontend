@@ -24,8 +24,8 @@ export default function FooterLinks() {
             href: ROUTES.PRODUCTS,
         },
         {
-            name: "Categories",
-            href: ROUTES.CATEGORIES,
+            name: "Services",
+            href: ROUTES.SERVICES,
         },
         {
             name: "Brands",
@@ -138,13 +138,12 @@ export default function FooterLinks() {
 
                     <li className="flex items-start gap-3">
                         <MapPin
-                            size={28}
+                            size={38}
                             className="mt-1 text-primary"
                         />
 
                         <span>
-                            No. XX Example Street,
-                            Lagos, Nigeria
+                            135A Apapa Rd, Ebute Metta, Lagos 101245, Lagos
                         </span>
                     </li>
 
@@ -155,8 +154,8 @@ export default function FooterLinks() {
                             className="text-primary"
                         />
 
-                        <a href="tel:+2348000000000">
-                            +234 800 000 0000
+                        <a href="tel:+2348033585468">
+                            +234 803 358 5468
                         </a>
 
                     </li>

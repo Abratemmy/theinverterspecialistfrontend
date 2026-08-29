@@ -36,22 +36,22 @@ export default function FeatureCard({
                     items-center
                     justify-center
                     rounded-full
-                    bgprimaryColorLight
+                    bg-[var(--bgcolor-primary)]
                 "
             >
                 <Icon
                     size={30}
-                   className="primaryColor"
+                   className="text-[var(--color-primary)]"
                 />
             </div>
 
             <div>
 
-                <h3 className="mb-2 text-base font-semibold">
+                <h3 className="mb-2 text-[var(--color-primary)] font-semibold">
                     {title}
                 </h3>
 
-                <p className="leading-7 text-gray-600">
+                <p className="leading-7 text-[var(--color-text-light)]">
                     {description}
                 </p>
             </div>

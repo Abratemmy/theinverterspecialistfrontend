@@ -1,6 +1,16 @@
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
 
-import { categoryService } from "@/services/category.service";
+import {
+    getCategories,
+    getCategoryBySlug,
+} from "@/services/category.service";
+
+
+// ==========================================================
+// GET ALL CATEGORIES
+// ==========================================================
 
 export function useCategories() {
 
@@ -8,11 +18,40 @@ export function useCategories() {
 
         queryKey: ["categories"],
 
-        queryFn: categoryService.getCategories,
+        queryFn: getCategories,
 
         staleTime: 5 * 60 * 1000,
-        // The staleTime means categories won't be refetched on every page visit for 5 minutes, 
-        // which is appropriate because categories don't change frequently.
+
     });
 
 }
+
+
+// ==========================================================
+// GET CATEGORY BY SLUG
+// ==========================================================
+
+export function useCategoryBySlug(
+    slug: string
+) {
+
+    return useQuery({
+
+        queryKey: [
+            "category",
+            slug
+        ],
+
+        queryFn: () =>
+            getCategoryBySlug(slug),
+
+        enabled: !!slug,
+
+        staleTime: 5 * 60 * 1000,
+
+    });
+
+}
+
+
+export default useCategories;

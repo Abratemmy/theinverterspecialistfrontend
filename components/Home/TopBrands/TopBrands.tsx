@@ -1,37 +1,30 @@
 "use client";
 
-import Link from "next/link";
-
 import SectionHeader from "@/components/common/SectionHeader";
 import LoadingState from "@/components/common/LoadingState/LoadingState";
 import EmptyState from "@/components/common/EmptyState/EmptyState";
+import Container from "@/components/common/Container/Container";
 
 import useBrands from "@/hooks/useBrands";
 import { ROUTES } from "@/constants/routes";
 
 import BrandCarousel from "./BrandCarousel";
-import Container from "@/components/common/Container/Container";
 
 export default function TopBrands() {
+
     const {
-        brands,
-        loading,
+        data,
+        isLoading,
         error,
-        // refetch,
     } = useBrands();
 
-    if (loading) return <LoadingState />;
 
-    if (error) return <EmptyState 
-            title="Unable to load categories"
-            description="Please try again."
-            // onRetry={refetch}
-    />;
+    const brands = data?.data ?? [];
 
-    const showViewAll = brands.length > 6;
 
     return (
         <section className="py-12">
+
             <Container>
 
                 <SectionHeader
@@ -41,17 +34,28 @@ export default function TopBrands() {
                     actionText="View All"
                 />
 
-                
 
-                <BrandCarousel
-                    brands={
-                        showViewAll
-                            ? brands
-                            : brands
-                    }
-                />
+                {isLoading ? (
+
+                    <LoadingState />
+
+                ) : error ? (
+
+                    <EmptyState
+                        title="Unable to load top brands"
+                        description="Please try again."
+                    />
+
+                ) : (
+
+                    <BrandCarousel
+                        brands={brands}
+                    />
+
+                )}
 
             </Container>
+
         </section>
     );
 }

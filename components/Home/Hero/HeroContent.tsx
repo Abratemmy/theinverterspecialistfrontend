@@ -16,16 +16,24 @@ export default function HeroContent() {
             {/* Badge */}
 
             <div className="mb-6">
-                <span className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
+                <span className="inline-flex items-center rounded-full bg-[var(--bgcolor-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)]">
                     Renewable Energy Solutions
                 </span>
             </div>
 
             {/* Heading */}
 
-            <h1 className="text-4xl font-bold leading-tight text-gray-900 sm:text-5xl lg:text-6xl">
+            <h1
+                className="
+                    text-3xl
+                    font-bold
+                    tracking-tight
+                    sm:text-4xl
+                    lg:text-5xl
+                "
+            >
                 Powering a
-                <span className="block text-green-600">
+                <span className="block text-[var(--color-primary)]">
                     Brighter, Greener Future
                 </span>
             </h1>
@@ -45,7 +53,7 @@ export default function HeroContent() {
 
                 <Link
                     href="/products"
-                    className="inline-flex items-center rounded-xl bg-green-600 px-8 py-4 font-semibold text-white transition hover:bg-green-700"
+                    className="inline-flex items-center rounded-xl bg-[var(--color-primary)] px-8 py-4 font-semibold text-white transition hover:bg-[var(--color-primary-dark)]"
                 >
                     Shop Now
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -53,7 +61,7 @@ export default function HeroContent() {
 
                 <Link
                     href="/contact"
-                    className="rounded-xl border border-green-600 px-8 py-4 font-semibold text-green-600 transition hover:bg-green-600 hover:text-white"
+                    className="rounded-xl border border-[var(--color-primary)] px-8 py-4 font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white"
                 >
                     Request Quote
                 </Link>
@@ -71,7 +79,7 @@ export default function HeroContent() {
                     >
                         <CheckCircle
                             size={22}
-                            className="primaryColor"
+                            className="text-primary"
                         />
 
                         <span className="font-medium text-gray-700">

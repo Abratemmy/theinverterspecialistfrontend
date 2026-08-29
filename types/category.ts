@@ -14,3 +14,13 @@ export interface CategoryResponse {
     count: number;
     data: Category[];
 }
+
+export interface CategorySingleResponse {
+
+    success: boolean;
+
+    message?: string;
+
+    data: Category;
+
+}

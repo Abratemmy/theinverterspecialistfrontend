@@ -10,7 +10,7 @@ export default function CategoryHero() {
                 bg-gradient-to-r
                 from-primary/10
                 to-primary/5
-                py-20
+                py-10
             "
         >
             <Container>
@@ -37,7 +37,7 @@ export default function CategoryHero() {
                             lg:text-5xl
                         "
                     >
-                        Shop by Categories
+                        Shop by <span className="text-primary">Categories</span>
                     </h1>
 
                     <p

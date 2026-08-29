@@ -6,6 +6,7 @@ import FooterLinks from "./FooterLinks";
 // import FooterNewsletter from "./FooterNewsletter";
 import FooterBottom from "./FooterBottom";
 import SocialLinks from "./SocialLinks";
+import { Logo } from "../Header";
 
 export default function Footer() {
     return (
@@ -26,10 +27,7 @@ export default function Footer() {
                     {/* Company Info */}
 
                     <div>
-
-                        <h2 className="text-3xl font-bold text-white">
-                            Ebton
-                        </h2>
+                        <Logo />
 
                         <p className="mt-5 leading-8 text-gray-400">
                             Your trusted partner for premium solar,

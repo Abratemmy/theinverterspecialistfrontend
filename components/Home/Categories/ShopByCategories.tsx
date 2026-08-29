@@ -24,7 +24,7 @@ export default function ShopByCategory() {
 
     if (isLoading) {
         return (
-            <section className="py-20">
+            <section className="py-5">
                 <Container>
 
                     <SectionHeader
@@ -45,7 +45,7 @@ export default function ShopByCategory() {
 
     if (isError) {
         return (
-            <section className="py-20">
+            <section className="py-5">
                 <Container>
 
                     <ErrorState
