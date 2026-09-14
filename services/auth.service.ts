@@ -25,6 +25,22 @@ export interface RegisterData {
 }
 
 
+export interface ForgotPasswordData {
+
+    email: string;
+
+}
+
+
+export interface ResetPasswordData {
+
+    token: string;
+
+    password: string;
+
+}
+
+
 export interface User {
 
     id: number;
@@ -102,6 +118,51 @@ export const logout =
         const response =
             await api.post(
                 "/auth/logout"
+            );
+
+
+        return response.data;
+
+    };
+
+
+// ============================================================
+// FORGOT PASSWORD
+// ============================================================
+
+export const forgotPassword =
+    async (
+        data: ForgotPasswordData
+    ) => {
+
+        const response =
+            await api.post(
+                "/auth/forgot-password",
+                data
+            );
+
+
+        return response.data;
+
+    };
+
+
+// ============================================================
+// RESET PASSWORD
+// ============================================================
+
+export const resetPassword =
+    async (
+        data: ResetPasswordData
+    ) => {
+
+        const response =
+            await api.post(
+                `/auth/reset-password/${data.token}`,
+                {
+                    password:
+                        data.password,
+                }
             );
 
 

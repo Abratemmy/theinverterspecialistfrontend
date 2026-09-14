@@ -3,7 +3,7 @@
 import {
     useState,
 } from "react";
-
+import axios from "axios"
 import {
     Search,
     ChevronLeft,
@@ -33,6 +33,7 @@ import EmptyState from "@/components/common/EmptyState/EmptyState";
 import ErrorState from "@/components/common/ErrorState/ErrorState";
 import OrderStatusSelect from "@/components/admin/Orders/OrderStatusSelect";
 import StatusSelect from "@/components/admin/StatusSelect";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
 
 
 
@@ -238,14 +239,13 @@ export default function AdminOrdersPage() {
         PaymentStatus | ""
     >("");
 
-    console.log("PAYMET", paymentStatus)
     const [
         page,
         setPage,
     ] = useState(1);
 
 
-    const limit = 3;
+    const limit = 10;
 
 
     // ========================================================
@@ -292,6 +292,106 @@ export default function AdminOrdersPage() {
         });
 
 
+    const getPaymentMethod = (order: Order) => {
+        const payment = order.payments?.[0];
+
+        if (!payment) {
+            return "N/A";
+        }
+
+        if (payment.payment_method === "bank_transfer") {
+            return "Direct Bank Transfer";
+        }
+
+        if (payment.payment_method === "card") {
+            return "Paystack";
+        }
+
+        return payment.payment_method;
+    };
+
+    const canChangeOrderStatus = (
+        order: Order
+    ) => {
+
+        return (
+            order.payment_status === "paid"
+        );
+
+    };
+
+    const [confirmingPayment, setConfirmingPayment] = useState<number | null>(null);
+
+
+    // ========================================================
+    // CONFIRM PAYMENT MODAL
+    // ========================================================
+
+    const [
+        confirmPaymentTarget,
+        setConfirmPaymentTarget,
+    ] = useState<{
+        order: Order;
+        paymentId: number;
+    } | null>(null);
+
+
+    const openConfirmPaymentModal = (
+        order: Order,
+        paymentId: number
+    ) => {
+
+        setConfirmPaymentTarget({
+            order,
+            paymentId,
+        });
+
+    };
+
+
+    const closeConfirmPaymentModal = () => {
+
+        if (confirmingPayment !== null) {
+            return;
+        }
+
+        setConfirmPaymentTarget(null);
+
+    };
+
+
+    const handleConfirmBankTransfer = async (paymentId: number) => {
+        try {
+            setConfirmingPayment(paymentId);
+
+            await axios.patch(
+                `${process.env.NEXT_PUBLIC_API_URL}/payments/admin/bank-transfer/${paymentId}/confirm`,
+                {},
+                {
+                    withCredentials: true,
+                }
+            );
+
+            showSuccess("Bank transfer payment confirmed successfully.");
+
+            // Refresh orders
+            refetch();
+
+            setConfirmPaymentTarget(null);
+
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                showError(
+                    error.response?.data?.message ||
+                        "Failed to confirm payment."
+                );
+            } else {
+                showError("Failed to confirm payment.");
+            }
+        } finally {
+            setConfirmingPayment(null);
+        }
+    };
     // ========================================================
     // SEARCH
     // ========================================================
@@ -341,40 +441,6 @@ export default function AdminOrdersPage() {
 
     };
 
-
-    const handleStatusChange = async (
-        orderId: number,
-        status: OrderStatus
-    ) => {
-
-        try {
-
-            await updateOrderStatus({
-
-                orderId,
-
-                order_status:
-                    status,
-
-            });
-
-
-            showSuccess(
-                "Order status updated successfully."
-            );
-
-        }
-        catch (error: any) {
-
-            showError(
-                error?.response?.data?.message ||
-                "Failed to update order status."
-            );
-
-        }
-
-    };
-
     // ========================================================
     // PAYMENT FILTER
     // ========================================================
@@ -389,6 +455,110 @@ export default function AdminOrdersPage() {
 
     };
 
+    const handleStatusChange = async (
+            orderId: number,
+            status: OrderStatus
+        ) => {
+
+            const order = orders.find(
+                (item) =>
+                    item.id === orderId
+            );
+
+
+            if (!order) {
+
+                showError(
+                    "Order not found."
+                );
+
+                return;
+
+            }
+
+
+            // ========================================================
+            // PAYMENT CHECK
+            // ========================================================
+
+            if (
+                order.payment_status !== "paid"
+            ) {
+
+                showError(
+                    "You can't perform this action because payment has not been made."
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                await updateOrderStatus({
+
+                    orderId,
+
+                    order_status:
+                        status,
+
+                });
+
+
+                showSuccess(
+                    "Order status updated successfully."
+                );
+
+            }
+            catch (error: unknown) {
+
+                if (
+                    error &&
+                    typeof error === "object" &&
+                    "response" in error
+                ) {
+
+                    const axiosError =
+                        error as {
+                            response?: {
+                                data?: {
+                                    message?: string;
+                                };
+                            };
+                        };
+
+
+                    showError(
+                        axiosError.response?.data?.message ||
+                        "Failed to update order status."
+                    );
+
+                    return;
+
+                }
+
+
+                showError(
+                    "Failed to update order status."
+                );
+
+            }
+
+        };
+
+
+    const getLatestPayment = (order: Order) => {
+        if (!order.payments?.length) {
+            return null;
+        }
+
+        return [...order.payments].sort(
+            (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+        )[0];
+    };
 
     // ========================================================
     // VIEW ORDER
@@ -445,6 +615,28 @@ export default function AdminOrdersPage() {
         );
 
     }
+
+
+    // ========================================================
+    // CONFIRM PAYMENT MODAL COPY
+    // ========================================================
+
+    const confirmPaymentCustomerName =
+        confirmPaymentTarget?.order.user
+            ? `${confirmPaymentTarget.order.user.first_name} ${confirmPaymentTarget.order.user.last_name}`
+            : confirmPaymentTarget
+                ? `Customer #${confirmPaymentTarget.order.user_id}`
+                : "";
+
+
+    const confirmPaymentTotal =
+        confirmPaymentTarget
+            ? `₦${Number(
+                  confirmPaymentTarget.order.total_amount
+              ).toLocaleString("en-NG", {
+                  minimumFractionDigits: 2,
+              })}`
+            : "";
 
 
     // ========================================================
@@ -831,6 +1023,18 @@ export default function AdminOrdersPage() {
                                             Total
                                         </th>
 
+                                        <th  className="
+                                                px-6
+                                                py-4
+                                                text-left
+                                                text-xs
+                                                font-semibold
+                                                uppercase
+                                                tracking-wider
+                                                text-muted-foreground
+                                            ">
+                                            Payment Method
+                                        </th>
 
                                         {/* PAYMENT */}
 
@@ -892,12 +1096,14 @@ export default function AdminOrdersPage() {
                                 <tbody>
 
                                     {orders.map(
-                                        (order) => (
+                                        (order) => {
+                                            const payment = getLatestPayment(order);
+                                            return(
                                             <tr
                                                 key={
                                                     order.id
                                                 }
-                                                 onClick={() =>handleViewOrder(order)}
+                                                onClick={() =>handleViewOrder(order)}
                                                 className="
                                                     cursor-pointer
                                                     border-b
@@ -1045,21 +1251,84 @@ export default function AdminOrdersPage() {
 
                                                 </td>
 
+                                                <td className="px-2 py-4 w-full">
+
+                                                    {getPaymentMethod(order) === "Direct Bank Transfer" ? (
+
+                                                        <span
+                                                            className="
+                                                                inline-flex
+                                                                rounded-full
+                                                                bg-orange-50
+                                                                px-3
+                                                                py-1
+                                                                text-xs
+                                                                font-medium
+                                                                text-orange-600
+                                                            "
+                                                        >
+                                                            Direct Bank Transfer
+                                                        </span>
+
+                                                    ) : getPaymentMethod(order) === "Paystack" ? (
+
+                                                        <span
+                                                            className="
+                                                                inline-flex
+                                                                rounded-full
+                                                                bg-blue-50
+                                                                px-3
+                                                                py-1
+                                                                text-xs
+                                                                font-medium
+                                                                text-blue-600
+                                                            "
+                                                        >
+                                                            Paystack
+                                                        </span>
+
+                                                    ) : (
+
+                                                        <span
+                                                            className="
+                                                                inline-flex
+                                                                rounded-full
+                                                                bg-gray-100
+                                                                px-3
+                                                                py-1
+                                                                text-xs
+                                                                font-medium
+                                                                text-gray-600
+                                                            "
+                                                        >
+                                                            {getPaymentMethod(order)}
+                                                        </span>
+
+                                                    )}
+
+                                                </td>
 
                                                 {/* PAYMENT */}
 
-                                                <td
-                                                    className="
-                                                        px-6
-                                                        py-4
-                                                    "
-                                                >
+                                               <td className="px-6 py-4">
+                                                    <PaymentStatusBadge status={ order.payment_status } />
+                                                    {payment?.payment_method === "bank_transfer" &&
+                                                        order.payment_status !== "paid" && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation();
 
-                                                    <PaymentStatusBadge
-                                                        status={
-                                                            order.payment_status
-                                                        }
-                                                    />
+                                                                    openConfirmPaymentModal(order, payment.id);
+                                                                }}
+                                                                disabled={confirmingPayment === payment.id}
+                                                                className="w-fit rounded-md bg-[var(--color-primary)] py-1 mt-2 text-[12px] font-medium text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                {confirmingPayment === payment.id
+                                                                    ? "Confirming..."
+                                                                    : "Confirm Payment"}
+                                                            </button>
+                                                        )}
 
                                                 </td>
 
@@ -1098,7 +1367,7 @@ export default function AdminOrdersPage() {
                                                         event.stopPropagation()
                                                     }
                                                 >
-                                                    <OrderStatusSelect
+                                                   <OrderStatusSelect
                                                         value={order.order_status}
                                                         paymentStatus={order.payment_status}
                                                         onChange={(status) =>
@@ -1108,14 +1377,15 @@ export default function AdminOrdersPage() {
                                                             )
                                                         }
                                                         disabled={
-                                                            updatingOrderStatus 
+                                                            updatingOrderStatus ||
+                                                            !canChangeOrderStatus(order)
                                                         }
                                                     />
                                                 </td>
 
                                             </tr>
 
-                                        )
+                                        )}
                                     )}
 
                                 </tbody>
@@ -1311,6 +1581,37 @@ export default function AdminOrdersPage() {
                 </>
 
             )}
+
+
+            {/* ================================================== */}
+            {/* CONFIRM PAYMENT MODAL */}
+            {/* ================================================== */}
+
+            <ConfirmationModal
+                open={confirmPaymentTarget !== null}
+                title="Confirm Bank Transfer Payment"
+                message={
+                    confirmPaymentTarget
+                        ? `Are you sure you want to confirm payment of ${confirmPaymentTotal} from ${confirmPaymentCustomerName}?`
+                        : undefined
+                }
+                itemName={confirmPaymentTarget?.order.order_number}
+                confirmText="Confirm Payment"
+                cancelText="Cancel"
+                loading={
+                    confirmPaymentTarget !== null &&
+                    confirmingPayment === confirmPaymentTarget.paymentId
+                }
+                variant="primary"
+                onClose={closeConfirmPaymentModal}
+                onConfirm={() => {
+                    if (confirmPaymentTarget) {
+                        handleConfirmBankTransfer(
+                            confirmPaymentTarget.paymentId
+                        );
+                    }
+                }}
+            />
 
         </div>
 

@@ -174,7 +174,7 @@ export default function SearchBar() {
                                     <button
                                         type="button"
                                         onClick={handleSearch}
-                                        className="px-5 text-gray-600 hover:text-green-600"
+                                        className="px-5 text-gray-600 hover:text-[var(--color-primary)]"
                                     >
                                         <Search size={22} />
                                     </button>
@@ -248,8 +248,8 @@ export default function SearchBar() {
                                         px-4
                                         py-2
                                         text-sm
-                                        hover:border-green-600
-                                        hover:text-green-600
+                                        hover:border-[var(--color-primary)]
+                                        hover:text-[var(--color-primary)]
                                     "
                                 >
 

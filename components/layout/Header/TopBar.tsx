@@ -20,7 +20,7 @@ export default function TopBar() {
   
             <div className="flex items-center gap-2">
               <Truck size={15} className="text-[var(--color-primary-dark)]" />
-              <span>Free Delivery for Orders ₦200,000+</span>
+              <span>Free shipping of goods above <strong> ₦2,000,000 </strong> to Lagos address only</span>
             </div>
 
             <div className="flex items-center gap-2">

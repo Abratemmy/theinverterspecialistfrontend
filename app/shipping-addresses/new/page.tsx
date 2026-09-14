@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
 ArrowLeft,
@@ -29,20 +29,14 @@ const redirect =
     searchParams.get("redirect") ||
     "/shipping-addresses";
 
-
+const [loadingUser, setLoadingUser] = useState(true);
 // ============================================================
 // FORM STATE
 // ============================================================
 
-const [
-    fullName,
-    setFullName
-] = useState("");
-
-const [
-    phone,
-    setPhone
-] = useState("");
+const [fullName, setFullName] = useState("");
+const [email, setEmail] = useState("");
+const [phone, setPhone] = useState("");
 
 const [
     addressLine1,
@@ -338,6 +332,42 @@ const handleCancel = () => {
 
 };
 
+useEffect(() => {
+    const fetchUser = async () => {
+        try {
+            const response = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+                {
+                    withCredentials: true,
+                }
+            );
+
+            if (response.data?.success) {
+                const user = response.data.data;
+
+                setFullName(
+                    `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
+                );
+
+                setEmail(user.email ?? "");
+
+                // If you want the user's registered phone
+                // to automatically appear, use this:
+                setPhone(user.phone ?? "");
+            }
+        } catch (error: unknown) {
+            console.error("Fetch user error:", error);
+
+            showError(
+                "Unable to load your account information."
+            );
+        } finally {
+            setLoadingUser(false);
+        }
+    };
+
+    fetchUser();
+}, []);
 
 // ============================================================
 // PAGE
@@ -512,34 +542,71 @@ return (
                             <input
                                 id="full_name"
                                 type="text"
-                                value={
-                                    fullName
-                                }
-                                onChange={(event) =>
-                                    setFullName(
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Enter recipient's full name"
+                                value={fullName}
+                                placeholder="Full name"
                                 autoComplete="name"
+                                readOnly
                                 className="
                                     w-full
                                     rounded-xl
                                     border
                                     border-gray-300
+                                    bg-gray-50
                                     px-4
                                     py-3
                                     text-sm
+                                    text-gray-500
                                     outline-none
-                                    transition
-                                    focus:border-primary
-                                    focus:ring-2
-                                    focus:ring-primary/20
+                                    cursor-not-allowed
                                 "
-                                disabled={
-                                    saving
-                                }
                             />
+
+                        </div>
+
+                        {/* ================================================== */}
+                        {/* EMAIL */}
+                        {/* ================================================== */}
+
+                        <div>
+
+                            <label
+                                htmlFor="email"
+                                className="
+                                    mb-2
+                                    block
+                                    text-sm
+                                    font-semibold
+                                    text-[var(--color-text)]
+                                "
+                            >
+                                Email Address
+                            </label>
+
+                            <input
+                                id="email"
+                                type="email"
+                                value={email}
+                                placeholder="Email address"
+                                autoComplete="email"
+                                readOnly
+                                className="
+                                    w-full
+                                    rounded-xl
+                                    border
+                                    border-gray-300
+                                    bg-gray-50
+                                    px-4
+                                    py-3
+                                    text-sm
+                                    text-gray-600
+                                    outline-none
+                                    cursor-not-allowed
+                                "
+                            />
+
+                            <p className="mt-1 text-xs text-gray-400">
+                                This information comes from your account and cannot be changed here.
+                            </p>
 
                         </div>
 

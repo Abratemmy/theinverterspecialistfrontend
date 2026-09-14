@@ -8,25 +8,32 @@ import {
     Store,
     Plus,
     Loader2,
+    CreditCard,
+    Building2,
+    ShieldCheck,
 } from "lucide-react";
 
 import useCart from "@/hooks/useCart";
 import useShippingAddress from "@/hooks/useShippingAddress";
+import useOrder from "@/hooks/useOrders";
+import usePayment from "@/hooks/usePayment";
 
-import type {
-    FulfillmentMethod,
-} from "@/types/order";
+import type { FulfillmentMethod } from "@/types/order";
 
 import formatCurrency from "@/utils/formatCurrency";
 import { showError } from "@/lib/toast";
-import useOrder from "@/hooks/useOrders";
+
 import { Header } from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer/Footer";
-import usePayment from "@/hooks/usePayment";
+
+
+type PaymentMethod = "paystack" | "transfer";
+
 
 export default function CheckoutPage() {
 
     const router = useRouter();
+
 
     // ============================================================
     // CART
@@ -49,20 +56,57 @@ export default function CheckoutPage() {
 
 
     // ============================================================
-    // STATE
+    // ORDER
+    // ============================================================
+
+    const {
+        createOrder,
+        creatingOrder,
+    } = useOrder();
+
+
+    // ============================================================
+    // PAYMENT
+    // ============================================================
+
+    const {
+        initializePayment,
+        initializingPayment,
+
+        createBankTransferPayment,
+        creatingBankTransferPayment,
+    } = usePayment();
+
+
+    // ============================================================
+    // FULFILLMENT
     // ============================================================
 
     const [
         fulfillmentMethod,
-        setFulfillmentMethod
-    ] = useState<FulfillmentMethod>(
-        "shipping"
-    );
+        setFulfillmentMethod,
+    ] = useState<FulfillmentMethod>("shipping");
+
+
+    // ============================================================
+    // SELECTED ADDRESS
+    // ============================================================
 
     const [
         selectedAddressId,
-        setSelectedAddressId
+        setSelectedAddressId,
     ] = useState<number | null>(null);
+
+
+    // ============================================================
+    // PAYMENT METHOD
+    // ============================================================
+
+    const [
+        paymentMethod,
+        setPaymentMethod,
+    ] = useState<PaymentMethod>("paystack");
+
 
     // ============================================================
     // VAT
@@ -70,43 +114,49 @@ export default function CheckoutPage() {
 
     const VAT_RATE = 0.075;
 
-    const subtotal = Number(cart?.grand_total ?? 0);
+    const subtotal =
+        Number(cart?.grand_total ?? 0);
 
-    const vatAmount = Math.round(subtotal * VAT_RATE);
+    const vatAmount =
+        Math.round(subtotal * VAT_RATE);
 
-    const totalWithVat = subtotal + vatAmount;
+    const totalWithVat =
+        subtotal + vatAmount;
 
-    // ============================================================
-    //CREATING ORDERS
-    // ============================================================
-    const {
-        createOrder,
-        creatingOrder,
-    } = useOrder();
-
-    // ============================================================
-    // Payment
-    // ============================================================
-
-    const {
-        initializePayment,
-        initializingPayment,
-    } = usePayment();
 
     // ============================================================
     // SELECT DEFAULT ADDRESS
     // ============================================================
+
     useEffect(() => {
 
         if (!addresses?.length) {
             return;
         }
 
+
+        // Keep current selection if it
+        // still exists.
+
+        if (
+            selectedAddressId !== null &&
+            addresses.some(
+                (address) =>
+                    address.id === selectedAddressId
+            )
+        ) {
+            return;
+        }
+
+
+        // Select default address.
+
         const defaultAddress =
             addresses.find(
                 (address) =>
                     address.is_default
             );
+
 
         if (defaultAddress) {
 
@@ -117,25 +167,22 @@ export default function CheckoutPage() {
             return;
         }
 
-        // If there is no default address,
-        // select the first address.
 
-        if (!selectedAddressId) {
+        // Otherwise select first address.
 
-            setSelectedAddressId(
-                addresses[0].id
-            );
-
-        }
+        setSelectedAddressId(
+            addresses[0].id
+        );
 
     }, [
         addresses,
-        selectedAddressId
+        selectedAddressId,
     ]);
 
 
     // ============================================================
-    // CHECKOUT
+    // CONTINUE
+    // ============================================================
 
     const handleContinue = async () => {
 
@@ -178,7 +225,7 @@ export default function CheckoutPage() {
         try {
 
             // ====================================================
-            // CREATE ORDER
+            // CREATE / GET ORDER
             // ====================================================
 
             const response =
@@ -196,7 +243,7 @@ export default function CheckoutPage() {
 
 
             // ====================================================
-            // SAVE ORDER
+            // GET ORDER
             // ====================================================
 
             const order =
@@ -216,30 +263,68 @@ export default function CheckoutPage() {
             // ====================================================
             // EXISTING PENDING ORDER
             // ====================================================
+            //
+            // The backend can return an existing pending
+            // order when the cart has not changed.
+            //
+            // We DO NOT stop here.
+            //
+            // We continue with the selected payment method.
+            // ====================================================
 
-            if (
+            const isExistingPendingOrder =
                 response.message
                     ?.toLowerCase()
-                    .includes("pending order")
-            ) {
+                    .includes("pending order");
 
-                showError(
-                    response.message
+
+            if (isExistingPendingOrder) {
+
+                console.log(
+                    "Using existing pending order:",
+                    order.id
                 );
 
             }
 
 
             // ====================================================
-            // INITIALIZE PAYMENT
+            // DIRECT BANK TRANSFER
+            // ====================================================
+
+            if (
+                paymentMethod === "transfer"
+            ) {
+
+                const bankTransferPayment =
+                    await createBankTransferPayment({
+                        order_id: order.id,
+                    });
+
+
+                console.log(
+                    "Bank transfer payment:",
+                    bankTransferPayment
+                );
+
+
+                // Go to order received page.
+
+                router.push(
+                    `/checkout/order-received/${order.id}`
+                );
+
+                return;
+            }
+
+
+            // ====================================================
+            // PAYSTACK
             // ====================================================
 
             const paymentResult =
                 await initializePayment({
-
-                    order_id:
-                        order.id,
-
+                    order_id: order.id,
                 });
 
 
@@ -268,7 +353,6 @@ export default function CheckoutPage() {
 
             window.location.href =
                 authorizationUrl;
-
 
         } catch (error: any) {
 
@@ -312,14 +396,9 @@ export default function CheckoutPage() {
                 "Unable to continue to payment.";
 
 
-            showError(
-                message
-            );
-
+            showError(message);
         }
-
     };
-
 
 
     // ============================================================
@@ -332,14 +411,13 @@ export default function CheckoutPage() {
     ) {
 
         return (
-
             <main className="min-h-screen">
 
+                <Header />
+
                 <div className="
-                    mx-auto
                     flex
                     min-h-[60vh]
-                    max-w-7xl
                     items-center
                     justify-center
                 ">
@@ -355,11 +433,21 @@ export default function CheckoutPage() {
 
                 </div>
 
+                <Footer />
+
             </main>
-
         );
-
     }
+
+
+    // ============================================================
+    // PROCESSING
+    // ============================================================
+
+    const isProcessing =
+        creatingOrder ||
+        initializingPayment ||
+        creatingBankTransferPayment;
 
 
     // ============================================================
@@ -369,7 +457,9 @@ export default function CheckoutPage() {
     return (
 
         <main>
+
             <Header />
+
             <section className="
                 min-h-screen
                 bg-[var(--color-background)]
@@ -383,6 +473,7 @@ export default function CheckoutPage() {
                     sm:px-6
                     lg:px-8
                 ">
+
 
                     {/* ================================================== */}
                     {/* PAGE TITLE */}
@@ -402,8 +493,8 @@ export default function CheckoutPage() {
                             mt-2
                             text-[var(--color-text-light)]
                         ">
-                            Choose how you would like to receive
-                            your order.
+                            Complete your order and choose your
+                            preferred payment method.
                         </p>
 
                     </div>
@@ -456,6 +547,7 @@ export default function CheckoutPage() {
 
 
                                     {/* SHIPPING */}
+
                                     <button
                                         type="button"
                                         onClick={() =>
@@ -542,17 +634,30 @@ export default function CheckoutPage() {
                                         ">
                                             Ship to my address
                                         </h3>
+
+
                                         <p className="
                                             mt-1.5
                                             text-sm
-                                            text-[var(--color-text-light)]"><strong>NOTE: </strong>Free shipping of goods above <strong> ₦700,000 </strong> to Lagos address only <br />
-                                        Shipping fees will be communicated to our esteem customers outside <strong> Lagos </strong> and good below <strong> ₦700,000 </strong>
+                                            leading-6
+                                            text-[var(--color-text-light)]
+                                        ">
+                                            <strong>NOTE:</strong>{" "}
+                                            Free shipping of goods above{" "}
+                                            <strong>₦700,000</strong>{" "}
+                                            to Lagos address only.
+                                            <br />
+                                            Shipping fees will be communicated
+                                            to our esteemed customers outside{" "}
+                                            <strong>Lagos</strong> and for goods
+                                            below <strong>₦700,000</strong>.
                                         </p>
 
                                     </button>
 
 
                                     {/* PICKUP */}
+
                                     <button
                                         type="button"
                                         onClick={() =>
@@ -642,8 +747,9 @@ export default function CheckoutPage() {
 
 
                                         <p className="
-                                            mt-1
+                                            mt-1.5
                                             text-sm
+                                            leading-6
                                             text-[var(--color-text-light)]
                                         ">
                                             Pick up your order from
@@ -661,8 +767,7 @@ export default function CheckoutPage() {
                             {/* SHIPPING ADDRESS */}
                             {/* ================================================== */}
 
-                            {fulfillmentMethod ===
-                                "shipping" && (
+                            {fulfillmentMethod === "shipping" && (
 
                                 <section className="
                                     rounded-2xl
@@ -723,7 +828,7 @@ export default function CheckoutPage() {
                                                 text-primary
                                                 transition
                                                 hover:bg-primary
-                                                hover:text-white
+                                                hover:text-[var(--color-primary-dark)]
                                             "
                                         >
 
@@ -752,6 +857,7 @@ export default function CheckoutPage() {
                                                         selectedAddressId ===
                                                         address.id;
 
+
                                                     return (
 
                                                         <button
@@ -771,6 +877,7 @@ export default function CheckoutPage() {
                                                                 p-4
                                                                 text-left
                                                                 transition
+                                                                mb-3
                                                                 ${
                                                                     selected
                                                                         ? `
@@ -875,12 +982,14 @@ export default function CheckoutPage() {
                                                                         }
 
                                                                         {address.address_line_2 &&
-                                                                            `, ${address.address_line_2}`}
+                                                                            `, ${address.address_line_2}`
+                                                                        }
 
                                                                         {`, ${address.city}, ${address.state}`}
 
                                                                         {address.postal_code &&
-                                                                            ` ${address.postal_code}`}
+                                                                            ` ${address.postal_code}`
+                                                                        }
 
                                                                         {`, ${address.country}`}
 
@@ -949,12 +1058,14 @@ export default function CheckoutPage() {
                                                 size={32}
                                             />
 
+
                                             <h3 className="
                                                 font-semibold
                                                 text-[var(--color-text)]
                                             ">
                                                 No shipping address
                                             </h3>
+
 
                                             <p className="
                                                 mt-1
@@ -1010,8 +1121,7 @@ export default function CheckoutPage() {
                             {/* PICKUP INFORMATION */}
                             {/* ================================================== */}
 
-                            {fulfillmentMethod ===
-                                "pickup" && (
+                            {fulfillmentMethod === "pickup" && (
 
                                 <section className="
                                     rounded-2xl
@@ -1054,15 +1164,17 @@ export default function CheckoutPage() {
                                                 Pickup Order
                                             </h2>
 
+
                                             <p className="
                                                 mt-2
                                                 text-sm
                                                 leading-6
                                                 text-[var(--color-text-light)]
                                             ">
-                                                Your order will be
-                                                prepared for pickup at
-                                                our office loaction
+                                                Your order will be prepared
+                                                for pickup at our designated
+                                                location. Pickup details will
+                                                be communicated to you.
                                             </p>
 
                                         </div>
@@ -1072,6 +1184,349 @@ export default function CheckoutPage() {
                                 </section>
 
                             )}
+
+
+                            {/* ================================================== */}
+                            {/* PAYMENT METHOD */}
+                            {/* ================================================== */}
+
+                            <section className="
+                                rounded-2xl
+                                bg-white
+                                p-6
+                                shadow-sm
+                            ">
+
+                                <div className="mb-5">
+
+                                    <h2 className="
+                                        text-xl
+                                        font-semibold
+                                        text-[var(--color-text)]
+                                    ">
+                                        Payment Method
+                                    </h2>
+
+                                    <p className="
+                                        mt-1
+                                        text-sm
+                                        text-[var(--color-text-light)]
+                                    ">
+                                        Choose how you would like to
+                                        pay for your order.
+                                    </p>
+
+                                </div>
+
+
+                                <div className="space-y-4">
+
+
+                                    {/* ================================================== */}
+                                    {/* PAYSTACK */}
+                                    {/* ================================================== */}
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setPaymentMethod(
+                                                "paystack"
+                                            )
+                                        }
+                                        className={`
+                                            w-full
+                                            rounded-2xl
+                                            border
+                                            p-5
+                                            text-left
+                                            transition
+                                            mb-3
+                                            ${
+                                                paymentMethod ===
+                                                "paystack"
+                                                    ? `
+                                                        border-primary
+                                                        bg-primary/5
+                                                        ring-2
+                                                        ring-primary/20
+                                                    `
+                                                    : `
+                                                        border-gray-200
+                                                        hover:border-primary/50
+                                                    `
+                                            }
+                                        `}
+                                    >
+
+                                        <div className="
+                                            flex
+                                            items-center
+                                            gap-4
+                                        ">
+
+                                            <div className="
+                                                flex
+                                                h-11
+                                                w-11
+                                                shrink-0
+                                                items-center
+                                                justify-center
+                                                rounded-xl
+                                                bg-primary/10
+                                                text-primary
+                                            ">
+
+                                                <CreditCard
+                                                    size={22}
+                                                />
+
+                                            </div>
+
+
+                                            <div className="flex-1">
+
+                                                <p className="
+                                                    font-semibold
+                                                    text-[var(--color-text)]
+                                                ">
+                                                    Pay with Paystack
+                                                </p>
+
+
+                                                <p className="
+                                                    mt-1
+                                                    text-sm
+                                                    leading-5
+                                                    text-[var(--color-text-light)]
+                                                ">
+                                                    Pay securely with your
+                                                    card, bank transfer,
+                                                    USSD or other supported
+                                                    Paystack methods.
+                                                </p>
+
+                                            </div>
+
+
+                                            <span className={`
+                                                flex
+                                                h-5
+                                                w-5
+                                                shrink-0
+                                                items-center
+                                                justify-center
+                                                rounded-full
+                                                border-2
+                                                ${
+                                                    paymentMethod ===
+                                                    "paystack"
+                                                        ? "border-primary bg-primary"
+                                                        : "border-gray-300"
+                                                }
+                                            `}>
+
+                                                {paymentMethod ===
+                                                    "paystack" && (
+                                                    <span className="
+                                                        h-2
+                                                        w-2
+                                                        rounded-full
+                                                        bg-white
+                                                    " />
+                                                )}
+
+                                            </span>
+
+                                        </div>
+
+                                    </button>
+
+
+                                    {/* ================================================== */}
+                                    {/* BANK TRANSFER */}
+                                    {/* ================================================== */}
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setPaymentMethod(
+                                                "transfer"
+                                            )
+                                        }
+                                        className={`
+                                            w-full
+                                            rounded-2xl
+                                            border
+                                            p-5
+                                            text-left
+                                            transition
+                                            ${
+                                                paymentMethod ===
+                                                "transfer"
+                                                    ? `
+                                                        border-primary
+                                                        bg-primary/5
+                                                        ring-2
+                                                        ring-primary/20
+                                                    `
+                                                    : `
+                                                        border-gray-200
+                                                        hover:border-primary/50
+                                                    `
+                                            }
+                                        `}
+                                    >
+
+                                        <div className="
+                                            flex
+                                            items-center
+                                            gap-4
+                                        ">
+
+                                            <div className="
+                                                flex
+                                                h-11
+                                                w-11
+                                                shrink-0
+                                                items-center
+                                                justify-center
+                                                rounded-xl
+                                                bg-primary/10
+                                                text-primary
+                                            ">
+
+                                                <Building2
+                                                    size={22}
+                                                />
+
+                                            </div>
+
+
+                                            <div className="flex-1">
+
+                                                <p className="
+                                                    font-semibold
+                                                    text-[var(--color-text)]
+                                                ">
+                                                    Direct Bank Transfer
+                                                </p>
+
+
+                                                <p className="
+                                                    mt-1
+                                                    text-sm
+                                                    leading-5
+                                                    text-[var(--color-text-light)]
+                                                ">
+                                                    Make a direct bank transfer
+                                                    using the account details
+                                                    provided after placing
+                                                    your order.
+                                                </p>
+
+                                            </div>
+
+
+                                            <span className={`
+                                                flex
+                                                h-5
+                                                w-5
+                                                shrink-0
+                                                items-center
+                                                justify-center
+                                                rounded-full
+                                                border-2
+                                                ${
+                                                    paymentMethod ===
+                                                    "transfer"
+                                                        ? "border-primary bg-primary"
+                                                        : "border-gray-300"
+                                                }
+                                            `}>
+
+                                                {paymentMethod ===
+                                                    "transfer" && (
+                                                    <span className="
+                                                        h-2
+                                                        w-2
+                                                        rounded-full
+                                                        bg-white
+                                                    " />
+                                                )}
+
+                                            </span>
+
+                                        </div>
+
+                                    </button>
+
+
+                                    {/* ================================================== */}
+                                    {/* BANK TRANSFER INFO */}
+                                    {/* ================================================== */}
+
+                                    {paymentMethod === "transfer" && (
+
+                                        <div className="
+                                            rounded-2xl
+                                            border
+                                            border-primary/20
+                                            bg-primary/5
+                                            p-5
+                                        ">
+
+                                            <div className="
+                                                flex
+                                                gap-3
+                                            ">
+
+                                                <ShieldCheck
+                                                    size={21}
+                                                    className="
+                                                        mt-0.5
+                                                        shrink-0
+                                                        text-primary
+                                                    "
+                                                />
+
+                                                <div>
+
+                                                    <h4 className="
+                                                        font-semibold
+                                                        text-[var(--color-text)]
+                                                    ">
+                                                        Direct Bank Transfer
+                                                    </h4>
+
+                                                    <p className="
+                                                        mt-1
+                                                        text-sm
+                                                        leading-6
+                                                        text-[var(--color-text-light)]
+                                                    ">
+                                                        After placing your
+                                                        order, you will be
+                                                        taken to a page with
+                                                        the bank account
+                                                        details and your
+                                                        order information.
+                                                        Your order will be
+                                                        processed after your
+                                                        payment has been
+                                                        confirmed.
+                                                    </p>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    )}
+
+                                </div>
+
+                            </section>
 
                         </div>
 
@@ -1112,59 +1567,60 @@ export default function CheckoutPage() {
                                     {cart?.items.map(
                                         (item) => (
 
-                                        <div
-                                            key={
-                                                item.id
-                                            }
-                                            className="
-                                                flex
-                                                gap-3
-                                            "
-                                        >
+                                            <div
+                                                key={item.id}
+                                                className="
+                                                    flex
+                                                    gap-3
+                                                "
+                                            >
 
-                                            <div className="
-                                                min-w-0
-                                                flex-1
-                                            ">
+                                                <div className="
+                                                    min-w-0
+                                                    flex-1
+                                                ">
+
+                                                    <p className="
+                                                        line-clamp-2
+                                                        text-sm
+                                                        font-medium
+                                                        text-[var(--color-text)]
+                                                    ">
+                                                        {
+                                                            item.product?.name
+                                                        }
+                                                    </p>
+
+
+                                                    <p className="
+                                                        mt-1
+                                                        text-xs
+                                                        text-[var(--color-text-light)]
+                                                    ">
+                                                        Qty:{" "}
+                                                        {
+                                                            item.quantity
+                                                        }
+                                                    </p>
+
+                                                </div>
+
 
                                                 <p className="
-                                                    line-clamp-2
+                                                    shrink-0
                                                     text-sm
-                                                    font-medium
+                                                    font-semibold
                                                     text-[var(--color-text)]
                                                 ">
-                                                    {
-                                                        item.product?.name
-                                                    }
-                                                </p>
-
-                                                <p className="
-                                                    mt-1
-                                                    text-xs
-                                                    text-[var(--color-text-light)]
-                                                ">
-                                                    Qty: {
-                                                        item.quantity
-                                                    }
+                                                    {formatCurrency(
+                                                        item.total_price
+                                                    )}
                                                 </p>
 
                                             </div>
 
-
-                                            <p className="
-                                                shrink-0
-                                                text-sm
-                                                font-semibold
-                                                text-[var(--color-text)]
-                                            ">
-                                                {formatCurrency(
-                                                    item.total_price
-                                                )}
-                                            </p>
-
-                                        </div>
-
-                                    ))}
+                                        )
+                                    )}
 
                                 </div>
 
@@ -1174,6 +1630,7 @@ export default function CheckoutPage() {
                                     border-t
                                     border-gray-200
                                 " />
+
 
                                 {/* SUBTOTAL */}
 
@@ -1247,9 +1704,42 @@ export default function CheckoutPage() {
                                         font-medium
                                         text-[var(--color-text)]
                                     ">
-                                        {fulfillmentMethod === "shipping"
-                                            ? "-"
-                                            : "Free"}
+                                        {fulfillmentMethod ===
+                                        "shipping"
+                                            ? "To be communicated"
+                                            : "Free"
+                                        }
+                                    </span>
+
+                                </div>
+
+
+                                {/* PAYMENT METHOD */}
+
+                                <div className="
+                                    mt-3
+                                    flex
+                                    justify-between
+                                    gap-4
+                                    text-sm
+                                ">
+
+                                    <span className="
+                                        text-[var(--color-text-light)]
+                                    ">
+                                        Payment
+                                    </span>
+
+                                    <span className="
+                                        text-right
+                                        font-medium
+                                        text-[var(--color-text)]
+                                    ">
+                                        {paymentMethod ===
+                                        "paystack"
+                                            ? "Paystack"
+                                            : "Direct Bank Transfer"
+                                        }
                                     </span>
 
                                 </div>
@@ -1288,16 +1778,21 @@ export default function CheckoutPage() {
                                 </div>
 
 
+
                                 {/* CONTINUE */}
+
                                 <button
                                     type="button"
-                                    onClick={handleContinue}
+                                    onClick={
+                                        handleContinue
+                                    }
                                     disabled={
-                                        creatingOrder ||
+                                        isProcessing ||
                                         !cart ||
                                         cart.items.length === 0 ||
                                         (
-                                            fulfillmentMethod === "shipping" &&
+                                            fulfillmentMethod ===
+                                            "shipping" &&
                                             !selectedAddressId
                                         )
                                     }
@@ -1320,18 +1815,36 @@ export default function CheckoutPage() {
                                         disabled:bg-gray-400
                                     "
                                 >
-                                    {creatingOrder ? (
+
+                                    {isProcessing ? (
+
                                         <>
+
                                             <Loader2
                                                 size={20}
-                                                className="animate-spin"
+                                                className="
+                                                    animate-spin
+                                                "
                                             />
 
-                                            Creating Order...
+                                            {creatingBankTransferPayment
+                                                ? "Preparing Bank Transfer..."
+                                                : initializingPayment
+                                                    ? "Connecting to Paystack..."
+                                                    : "Creating Order..."
+                                            }
+
                                         </>
+
                                     ) : (
-                                        "Continue to Payment"
+
+                                        paymentMethod ===
+                                        "transfer"
+                                            ? "Place Order"
+                                            : "Continue to Payment"
+
                                     )}
+
                                 </button>
 
 
@@ -1367,8 +1880,9 @@ export default function CheckoutPage() {
                 </div>
 
             </section>
-            <Footer />
-        </main>
 
+            <Footer />
+
+        </main>
     );
 }

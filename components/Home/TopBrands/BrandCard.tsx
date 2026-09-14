@@ -27,7 +27,8 @@ export default function BrandCard({
                 border
                 border-gray-200
                 bg-white
-                p-6
+                px-6
+                py-2
                 shadow-sm
                 transition-all
                 duration-300
@@ -36,7 +37,7 @@ export default function BrandCard({
                 hover:shadow-xl
             "
         >
-            <div className="relative h-20 w-32">
+            <div className="relative h-[100px] w-[100px]">
                 <ImageWithFallback
                     src={brand.logo}
                     alt={brand.name}

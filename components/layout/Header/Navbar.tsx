@@ -278,7 +278,6 @@ export default function Navbar() {
                         {/* ================================================== */}
 
                         {user ? (
-
                             <Link
                                 href="/wishlist"
                                 className="
@@ -351,8 +350,8 @@ export default function Navbar() {
                                 aria-label="Wishlist"
                             >
 
-                                <Heart
-                                    size={22}
+                                <Heart className="text-[var(--color-text-light)]"
+                                    size={32}
                                 />
 
                             </button>

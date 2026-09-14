@@ -448,8 +448,6 @@ export default function ContactPage() {
                                     Email
 
                                 </h3>
-
-
                                 <p className="
                                     mt-1
                                     break-all
@@ -457,10 +455,9 @@ export default function ContactPage() {
                                     text-[var(--color-text-light)]
                                 ">
 
-                                    {process.env
-                                        .NEXT_PUBLIC_CONTACT_EMAIL ||
-                                        "info@theinverterspecialist.com"}
-
+                                    <a href="mailto:theinverterspecialist@gmail.com">
+                                        Theinverterspecialist@gmail.com
+                                    </a>
                                 </p>
 
                             </div>
@@ -514,9 +511,17 @@ export default function ContactPage() {
                                     mt-1
                                     text-sm
                                     text-[var(--color-text-light)]
+                                    flex flex-col gap-3
                                 ">
 
-                                    +234 800 000 0000
+                                    <a href="tel:+2348033585468">
+                                        +234 803 358 5468 <br />
+                                    </a>
+
+                                    <a href="tel:+2348088314848">
+                                        +234 808 831 4848
+                                    </a>
+
 
                                 </p>
 
@@ -574,7 +579,7 @@ export default function ContactPage() {
                                     text-[var(--color-text-light)]
                                 ">
 
-                                    Nigeria
+                                    135A Apapa Rd, Ebute Metta, Lagos 101245, Lagos
 
                                 </p>
 

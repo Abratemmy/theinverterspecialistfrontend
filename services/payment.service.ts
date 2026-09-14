@@ -41,3 +41,16 @@ export const verifyPayment = async (
     return data;
 };
 
+export const createBankTransferPayment = async (
+    payload: {
+        order_id: number;
+    }
+) => {
+
+    const response = await api.post(
+        "/payments/bank-transfer",
+        payload
+    );
+
+    return response.data;
+};

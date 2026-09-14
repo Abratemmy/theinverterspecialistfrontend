@@ -7,6 +7,7 @@ import {
 import {
     initializePayment,
     verifyPayment,
+    createBankTransferPayment
 } from "@/services/payment.service";
 
 import type {
@@ -41,6 +42,11 @@ export default function usePayment() {
 
     });
 
+    const bankTransferMutation = useMutation({
+        mutationFn: (payload: { order_id: number }) =>
+            createBankTransferPayment(payload),
+    });
+
 
     // ============================================================
     // RETURN
@@ -52,28 +58,31 @@ export default function usePayment() {
         // Initialize
         // --------------------------------------------------------
 
-        initializePayment:
-            initializeMutation.mutateAsync,
+        initializePayment: initializeMutation.mutateAsync,
 
-        initializingPayment:
-            initializeMutation.isPending,
+        initializingPayment: initializeMutation.isPending,
 
-        initializePaymentError:
-            initializeMutation.error,
+        initializePaymentError: initializeMutation.error,
 
 
         // --------------------------------------------------------
         // Verify
         // --------------------------------------------------------
 
-        verifyPayment:
-            verifyMutation.mutateAsync,
+        verifyPayment: verifyMutation.mutateAsync,
 
-        verifyingPayment:
-            verifyMutation.isPending,
+        verifyingPayment: verifyMutation.isPending,
 
-        verifyPaymentError:
-            verifyMutation.error,
+        verifyPaymentError: verifyMutation.error,
+        
+        createBankTransferPayment:
+        bankTransferMutation.mutateAsync,
+
+        creatingBankTransferPayment:
+            bankTransferMutation.isPending,
+
+        createBankTransferPaymentError:
+            bankTransferMutation.error,
 
     };
 

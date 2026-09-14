@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 
-import toast from "react-hot-toast";
-import { logout } from "@/services/auth.service";
+import useAdminLogout from "@/hooks/useAdminLogout";
 
 import {
     LayoutDashboard,
@@ -17,9 +15,8 @@ import {
     MessageSquare,
     CreditCard,
     LogOut,
-    Store,
+    Images
 } from "lucide-react";
-import { showError, showSuccess } from "@/lib/toast";
 import Image from "next/image";
 
 const navigation = [
@@ -81,68 +78,22 @@ const navigation = [
         title: "Contact Messages",
         href: "/admin/contact-messages",
         icon: MessageSquare,
+    },
+    {
+        title: "Installation Gallery",
+        href: "/admin/gallery",
+        icon: Images,
     }
 ];
 
 export default function AdminSidebar() {
 
     const pathname = usePathname();
-     const router =
-        useRouter();
 
-
-    const [
+    const {
+        handleLogout,
         loggingOut,
-        setLoggingOut
-    ] = useState(false);
-
-    const handleLogout = async () => {
-
-        if (loggingOut) {
-            return;
-        }
-
-
-        try {
-
-            setLoggingOut(true);
-
-
-            await logout();
-
-
-            showSuccess(
-                "Logged out successfully."
-            );
-
-
-            router.replace(
-                "/"
-            );
-
-            router.refresh();
-
-        }
-        catch (error: unknown) {
-
-            console.error(
-                "Logout error:",
-                error
-            );
-
-
-            showError(
-                "Unable to logout. Please try again."
-            );
-
-        }
-        finally {
-
-            setLoggingOut(false);
-
-        }
-
-    };
+    } = useAdminLogout();
 
     return (
 
@@ -185,7 +136,7 @@ export default function AdminSidebar() {
                     "
                 >
                     <Image
-                        src="/images/logo.jpeg"
+                        src="/images/logo.png"
                         alt="Ebton Greener Energy Co."
                         width={180}
                         height={60}

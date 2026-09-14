@@ -20,7 +20,7 @@ export const FEATURES = [
     },
     {
         icon: BadgeCheck,
-        title: "1 Year Warranty",
+        title: "Years Warranty",
         description:
             "Warranty available on selected products.",
     },

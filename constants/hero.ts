@@ -15,28 +15,20 @@ export const HERO_SLIDES: HeroSlide[] = [
         subtitle: "With Clean Renewable Energy",
         description:
             "Premium solar panels, hybrid inverters and lithium batteries engineered for dependable power.",
-        image: "/images/hero/hero-1.png",
+        image: "/images/hero/hero-1.jpg",
         primaryButton: "Shop Now",
         secondaryButton: "Request Quote",
     },
     {
         id: 2,
-        title: "Reliable Backup",
-        subtitle: "Energy You Can Trust",
-        description:
-            "Keep your home and business running during outages with industry-leading inverter systems.",
-        image: "/images/hero/hero-2.png",
-        primaryButton: "Explore Products",
-        secondaryButton: "Contact Us",
-    },
-    {
-        id: 3,
         title: "Solar Solutions",
         subtitle: "Designed For Every Home",
         description:
             "Complete solar packages professionally designed and installed by experienced engineers.",
-        image: "/images/hero/hero-2.png",
+        image: "/images/hero/hero-4.jpg",
         primaryButton: "View Packages",
         secondaryButton: "Get Started",
     },
 ];
+
+// Theinverterspecialist@@2026

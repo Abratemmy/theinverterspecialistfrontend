@@ -21,7 +21,7 @@ import {
     MessageSquare,
     CreditCard,
     LogOut,
-    Store,
+    Images,
     X,
 } from "lucide-react";
 
@@ -95,6 +95,12 @@ const navigation = [
         title: "Contact Messages",
         href: "/admin/contact-messages",
         icon: MessageSquare,
+    },
+
+    {
+        title: "Installation Gallery",
+        href: "/admin/gallery",
+        icon: Images,
     },
 
 ];
@@ -279,7 +285,7 @@ export default function AdminMobileMenu({
                             >
 
                                  <Image
-                                    src="/images/logo.jpeg"
+                                    src="/images/logo.png"
                                     alt="Ebton Greener Energy Co."
                                     width={180}
                                     height={60}

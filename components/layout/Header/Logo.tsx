@@ -5,7 +5,7 @@ export default function Logo() {
     return (
         <Link href="/">
             <Image
-                src="/images/logo.jpeg"
+                src="/images/logo.png"
                 alt="Ebton Greener Energy Co."
                 width={180}
                 height={60}

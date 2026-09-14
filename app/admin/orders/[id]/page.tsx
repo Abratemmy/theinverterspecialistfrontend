@@ -5,7 +5,34 @@ import { useParams, useRouter } from "next/navigation";
 import { showError, showSuccess } from "@/lib/toast";
 import OrderStatusSelect from "@/components/admin/Orders/OrderStatusSelect";
 import { ErrorState, LoadingState } from "@/components/common";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
 
+
+type PaymentMethod =
+    | "card"
+    | "bank_transfer"
+    | "ussd"
+    | "bank"
+    | "qr"
+    | "mobile_money"
+    | "cash_on_delivery";
+
+interface OrderPayment {
+    id: number;
+    order_id: number;
+    payment_method: PaymentMethod;
+    gateway: string;
+    status:
+        | "pending"
+        | "successful"
+        | "failed"
+        | "cancelled"
+        | "refunded";
+    payment_reference: string;
+    amount: string | number;
+    paid_at?: string | null;
+    created_at: string;
+}
 type OrderStatus =
     | "pending"
     | "processing"
@@ -116,6 +143,7 @@ interface Order {
     shippingAddress?: ShippingAddress;
 
     items: OrderItem[];
+    payments?: OrderPayment[];
     fulfillment_method: "shipping" | "pickup";
 
     subtotal: number;
@@ -162,6 +190,130 @@ export default function OrderDetailsPage() {
     const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState("");
+
+    const [confirmingPayment, setConfirmingPayment] = useState(false);
+
+    const [showConfirmPaymentModal, setShowConfirmPaymentModal] = useState(false);
+
+    const getLatestPayment = (order: Order) => {
+        if (!order.payments?.length) {
+            return null;
+        }
+
+        return [...order.payments].sort(
+            (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+        )[0];
+    };
+
+    const getPaymentMethodLabel = (
+        payment?: OrderPayment | null
+    ) => {
+        if (!payment) {
+            return "N/A";
+        }
+
+        if (payment.payment_method === "bank_transfer") {
+            return "Direct Bank Transfer";
+        }
+
+        if (payment.payment_method === "card") {
+            return "Paystack";
+        }
+
+        return payment.payment_method
+            .replace("_", " ")
+            .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    };
+
+    const handleConfirmBankTransfer = async () => {
+        if (!order) return;
+
+        const payment = getLatestPayment(order);
+
+        if (!payment) {
+            showError("Payment record not found.");
+            return;
+        }
+
+        if (payment.payment_method !== "bank_transfer") {
+            showError(
+                "This order is not a direct bank transfer payment."
+            );
+            return;
+        }
+
+        if (order.payment_status === "paid") {
+            showError("This payment has already been confirmed.");
+            return;
+        }
+
+        try {
+            setConfirmingPayment(true);
+
+            const response = await fetch(
+                `${apiUrl}/payments/admin/bank-transfer/${payment.id}/confirm`,
+                {
+                    method: "PATCH",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message ||
+                        "Failed to confirm payment."
+                );
+            }
+
+            // Update the page immediately
+            setOrder((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        payment_status: "paid",
+                        payments: prev.payments?.map(
+                            (item) =>
+                                item.id === payment.id
+                                    ? {
+                                            ...item,
+                                            status: "successful",
+                                            paid_at:
+                                                new Date().toISOString(),
+                                        }
+                                    : item
+                        ),
+                    }
+                    : prev
+            );
+
+            showSuccess(
+                "Bank transfer payment confirmed successfully."
+            );
+
+            setShowConfirmPaymentModal(false);
+
+        } catch (error) {
+            console.error(
+                "CONFIRM BANK TRANSFER ERROR:",
+                error
+            );
+
+            showError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to confirm payment."
+            );
+        } finally {
+            setConfirmingPayment(false);
+        }
+    };
 
     const getProductImage = (
         media: ProductMedia[]
@@ -779,39 +931,174 @@ export default function OrderDetailsPage() {
                     {/* Payment */}
                     <section className="rounded-2xl border border-gray-200 bg-white p-6">
 
-                        <h2 className="mb-4 text-base font-semibold">
+                        <h2 className="mb-5 text-base font-semibold text-gray-900">
                             Payment
                         </h2>
 
-                        <div className="flex items-center justify-between">
+                        {(() => {
+                            const payment = getLatestPayment(order);
 
-                            <span className="text-sm text-gray-500">
-                                Payment Status
-                            </span>
+                            return (
+                                <div className="space-y-4">
 
-                            <span
-                                className={`
-                                    rounded-full
-                                    px-3
-                                    py-1
-                                    text-xs
-                                    font-medium
-                                    ${
-                                        order.payment_status ===
-                                        "paid"
-                                            ? "bg-green-50 text-green-700"
-                                            : "bg-yellow-50 text-yellow-700"
-                                    }
-                                `}
-                            >
-                                {
-                                    paymentLabels[
-                                        order.payment_status
-                                    ]
-                                }
-                            </span>
+                                    {/* Payment Method */}
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-sm text-gray-500">
+                                            Payment Method
+                                        </span>
 
-                        </div>
+                                        <span
+                                            className={`
+                                                rounded-full
+                                                px-3
+                                                py-1
+                                                text-xs
+                                                font-medium
+                                                ${
+                                                    payment?.payment_method ===
+                                                    "bank_transfer"
+                                                        ? "bg-orange-50 text-orange-700"
+                                                        : "bg-blue-50 text-blue-700"
+                                                }
+                                            `}
+                                        >
+                                            {getPaymentMethodLabel(payment)}
+                                        </span>
+                                    </div>
+
+                                    {/* Payment Status */}
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-sm text-gray-500">
+                                            Payment Status
+                                        </span>
+
+                                        <span
+                                            className={`
+                                                rounded-full
+                                                px-3
+                                                py-1
+                                                text-xs
+                                                font-medium
+                                                ${
+                                                    order.payment_status ===
+                                                    "paid"
+                                                        ? "bg-green-50 text-green-700"
+                                                        : "bg-yellow-50 text-yellow-700"
+                                                }
+                                            `}
+                                        >
+                                            {
+                                                paymentLabels[
+                                                    order.payment_status
+                                                ]
+                                            }
+                                        </span>
+                                    </div>
+
+                                    {/* Payment Reference */}
+                                    {payment?.payment_reference && (
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="text-sm text-gray-500">
+                                                Payment Reference
+                                            </span>
+
+                                            <span className="max-w-[220px] truncate text-right text-xs font-medium text-gray-700">
+                                                {payment.payment_reference}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Paid At */}
+                                    {payment?.paid_at && (
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="text-sm text-gray-500">
+                                                Paid At
+                                            </span>
+
+                                            <span className="text-xs text-gray-700">
+                                                {new Date(
+                                                    payment.paid_at
+                                                ).toLocaleString()}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Confirm Bank Transfer */}
+                                    {payment?.payment_method ===
+                                        "bank_transfer" &&
+                                        order.payment_status !== "paid" && (
+                                            <div className="border-t border-gray-100 pt-4">
+
+                                                <div className="mb-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+                                                    <p className="text-xs leading-5 text-orange-700">
+                                                        This customer selected direct bank
+                                                        transfer. Confirm that the payment
+                                                        has been received in the company bank
+                                                        account before confirming.
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowConfirmPaymentModal(
+                                                            true
+                                                        )
+                                                    }
+                                                    disabled={confirmingPayment}
+                                                    className="
+                                                        w-full
+                                                        rounded-lg
+                                                        bg-[var(--color-primary)]
+                                                        px-4
+                                                        py-2.5
+                                                        text-sm
+                                                        font-medium
+                                                        text-white
+                                                        transition
+                                                        hover:bg-[var(--color-primary-dark)]
+                                                        disabled:cursor-not-allowed
+                                                        disabled:opacity-50
+                                                    "
+                                                >
+                                                    Confirm Bank Transfer Payment
+                                                </button>
+
+                                            </div>
+                                        )}
+                                    <ConfirmationModal
+                                        open={showConfirmPaymentModal}
+                                        title="Confirm Bank Transfer Payment"
+                                        message={
+                                            order
+                                                ? `Are you sure you want to confirm that payment of ₦${Number(
+                                                    order.total_amount
+                                                ).toLocaleString("en-NG", {
+                                                    minimumFractionDigits: 2,
+                                                })} has been received from ${
+                                                    order.user
+                                                        ? `${order.user.first_name} ${order.user.last_name}`
+                                                        : `Customer #${order.user?.id ?? ""}`
+                                                }?`
+                                                : undefined
+                                        }
+                                        itemName={order?.order_number}
+                                        confirmText="Confirm Payment"
+                                        cancelText="Cancel"
+                                        loading={confirmingPayment}
+                                        variant="primary"
+                                        onClose={() => {
+                                            if (!confirmingPayment) {
+                                                setShowConfirmPaymentModal(false);
+                                            }
+                                        }}
+                                        onConfirm={handleConfirmBankTransfer}
+                                    />
+                                
+
+                                </div>
+                            );
+                        })()}
 
                     </section>
 

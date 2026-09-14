@@ -12,7 +12,7 @@ export default function EmptyState({
     description,
 }: EmptyStateProps) {
     return (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-10 text-center">
 
             <Inbox
                 size={70}

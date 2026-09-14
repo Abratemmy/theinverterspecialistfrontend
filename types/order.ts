@@ -1,5 +1,6 @@
 import type { Product } from "./product";
 import type { ShippingAddress } from "./shippingAddress";
+import type { AdminPayment } from "./payment";
 
 
 export type FulfillmentMethod =
@@ -23,6 +24,23 @@ export type OrderStatus =
     | "delivered"
     | "cancelled";
 
+
+export type PaymentMethod =
+    | "card"
+    | "bank_transfer"
+    | "paystack";
+
+
+export interface OrderPayment {
+    id: number;
+    payment_reference: string;
+    gateway: string;
+    payment_method: PaymentMethod;
+    amount: string;
+    currency: string;
+    status: string;
+    paid_at?: string | null;
+}
 
 export interface OrderUser {
 
@@ -99,6 +117,8 @@ export interface Order {
 
     payment_status:
         PaymentStatus;
+
+    payments?: AdminPayment[];
 
     order_status:
         OrderStatus;

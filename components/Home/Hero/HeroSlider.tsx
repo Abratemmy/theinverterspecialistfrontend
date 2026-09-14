@@ -104,7 +104,7 @@ export default function HeroSlider() {
                 p-3
                 shadow-lg
                 transition
-                hover:bg-green-600
+                hover:bg-[var(--color-primary)]
                 hover:text-white
                 "
             >
@@ -125,7 +125,7 @@ export default function HeroSlider() {
                 p-3
                 shadow-lg
                 transition
-                hover:bg-green-600
+                hover:bg-[var(--color-primary)]
                 hover:text-white
                 "
             >
@@ -143,8 +143,8 @@ export default function HeroSlider() {
                         onClick={() => scrollTo(index)}
                         className={`h-3 rounded-full transition-all duration-300 ${
                             selectedIndex === index
-                                ? "w-10 bg-green-600"
-                                : "w-3 bg-gray-300 hover:bg-green-300"
+                                ? "w-10 bg-[var(--color-primary)]"
+                                : "w-3 bg-gray-300 hover:bg-[var(--color-primary-dark)]"
                         }`}
                     />
 

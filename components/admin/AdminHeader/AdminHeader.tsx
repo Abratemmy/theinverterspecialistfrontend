@@ -13,12 +13,16 @@ import {
 import AdminNotificationDropdown
     from "@/components/admin/AdminNotificationDropdown";
 
+import AdminMobileMenu
+    from "@/components/admin/AdminMobileMenu/AdminMobileMenu";
+
 import useNotifications
     from "@/hooks/useNotifications";
 
 import useAuth from "@/hooks/useAuth";
 import Image from "next/image";
 import Link from "next/link";
+import useAdminLogout from "@/hooks/useAdminLogout";
 
 
 export default function AdminHeader() {
@@ -28,11 +32,20 @@ export default function AdminHeader() {
         setNotificationsOpen
     ] = useState(false);
 
+    const [
+        mobileMenuOpen,
+        setMobileMenuOpen
+    ] = useState(false);
+
     const {
         user
     } = useAuth();
 
-    console.log("ÜSER", user)
+    const {
+        handleLogout,
+        loggingOut,
+    } = useAdminLogout();
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
     const {
@@ -65,6 +78,11 @@ export default function AdminHeader() {
 
             <button
                 type="button"
+                onClick={() =>
+                    setMobileMenuOpen(
+                        true
+                    )
+                }
                 className="
                     flex
                     h-10
@@ -290,6 +308,32 @@ export default function AdminHeader() {
                 </div>
 
             </div>
+
+
+            {/* MOBILE NAV DRAWER */}
+
+            <AdminMobileMenu
+
+                open={
+                    mobileMenuOpen
+                }
+
+                onClose={() =>
+                    setMobileMenuOpen(
+                        false
+                    )
+                }
+
+                onLogout={
+                    handleLogout
+                }
+
+                loggingOut={
+                    loggingOut
+                }
+
+            />
+
         </header>
 
     );

@@ -5,10 +5,6 @@ import {
     Package,
     ShoppingBag,
     Wallet,
-    AlertTriangle,
-    Clock,
-    Truck,
-    CheckCircle2,
 } from "lucide-react";
 
 import {

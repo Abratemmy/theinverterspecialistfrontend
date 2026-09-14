@@ -20,6 +20,7 @@ export default function TopBrands() {
 
 
     const brands = data?.data ?? [];
+    console.log("brands", data?.data)
 
 
     return (

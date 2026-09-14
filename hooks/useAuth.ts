@@ -11,11 +11,15 @@ import {
     login,
     logout,
     getCurrentUser,
+    forgotPassword,
+    resetPassword,
 } from "@/services/auth.service";
 
 import type {
     LoginPayload,
     RegisterPayload,
+    ForgotPasswordPayload,
+    ResetPasswordPayload,
 } from "@/types/auth";
 
 export default function useAuth() {
@@ -115,6 +119,36 @@ export default function useAuth() {
     });
 
 
+    // ========================================================
+    // FORGOT PASSWORD
+    // ========================================================
+
+    const forgotPasswordMutation =
+        useMutation({
+
+            mutationFn: (
+                payload: ForgotPasswordPayload
+            ) =>
+                forgotPassword(payload),
+
+        });
+
+
+    // ========================================================
+    // RESET PASSWORD
+    // ========================================================
+
+    const resetPasswordMutation =
+        useMutation({
+
+            mutationFn: (
+                payload: ResetPasswordPayload
+            ) =>
+                resetPassword(payload),
+
+        });
+
+
     return {
 
         // User
@@ -165,6 +199,34 @@ export default function useAuth() {
 
         logoutError:
             logoutMutation.error,
+
+
+        // Forgot Password
+        forgotPassword:
+            forgotPasswordMutation.mutateAsync,
+
+        sendingResetLink:
+            forgotPasswordMutation.isPending,
+
+        forgotPasswordError:
+            forgotPasswordMutation.error,
+
+        forgotPasswordSuccess:
+            forgotPasswordMutation.isSuccess,
+
+        resetForgotPasswordState:
+            forgotPasswordMutation.reset,
+
+
+        // Reset Password
+        resetPassword:
+            resetPasswordMutation.mutateAsync,
+
+        resettingPassword:
+            resetPasswordMutation.isPending,
+
+        resetPasswordError:
+            resetPasswordMutation.error,
 
     };
 }

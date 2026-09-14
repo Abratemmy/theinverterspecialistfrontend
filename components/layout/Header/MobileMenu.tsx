@@ -20,6 +20,8 @@ import {
     Info,
     BookUser,
     HandPlatter,
+    Heart,
+    Images
 } from "lucide-react";
 
 
@@ -91,18 +93,32 @@ export default function MobileMenu({
             icon: HandPlatter
 
         },
-         {
+        {
             id: 7,
+            name: "Gallery",
+            link: '/gallery',
+            icon: Images
+
+        },
+         {
+            id: 8,
             name: "Contact",
             link: '/contact',
             icon: BookUser
 
         },
-         {
-            id: 8,
+        {
+            id: 9,
             name: "Cart",
             link: '/cart',
             icon: ShoppingCart
+
+        },
+        {
+            id: 10,
+            name: "Wishlist",
+            link: '/wishlist',
+            icon: Heart
 
         }
     ]
@@ -480,6 +496,45 @@ export default function MobileMenu({
                                     My Orders
 
                                 </Link>
+
+                                 {(user.role === "admin" || user.role === "manager") && (
+                                                <Link
+                                                    href="/admin"
+                                                    onClick={handleNavigation}
+                                                    className="
+                                                        flex
+                                                        items-center
+                                                        gap-4
+                                                        border-b
+                                                        border-gray-100
+                                                        px-5
+                                                        py-4
+                                                        text-sm
+                                                        font-medium
+                                                        text-gray-700
+                                                        transition
+                                                        hover:bg-gray-50
+                                                        hover:text-primary
+                                                    "
+                                                >
+                                                    <span className="
+                                                        flex
+                                                        h-9
+                                                        w-9
+                                                        items-center
+                                                        justify-center
+                                                        rounded-lg
+                                                        bg-primary/10
+                                                        text-primary
+                                                    ">
+                                                        <UserCircle
+                                                            size={18}
+                                                        />
+                                                    </span>
+                                                    Go To Dashboard
+
+                                                </Link>
+                                            )}
 
 
                                 {/* ==========================================

@@ -130,11 +130,11 @@ export default function FooterLinks() {
 
             <div>
 
-                <h3 className="mb-6 text-lg font-semibold text-white">
+                <h3 className="mb-6 text-lg font-semibold text-white ">
                     Contact
                 </h3>
 
-                <ul className="space-y-5">
+                <ul className="space-y-5 flex flex-col gap-3">
 
                     <li className="flex items-start gap-3">
                         <MapPin
@@ -154,9 +154,16 @@ export default function FooterLinks() {
                             className="text-primary"
                         />
 
+                        <div className="flex flex-col gap-1">
                         <a href="tel:+2348033585468">
                             +234 803 358 5468
                         </a>
+
+                        <a href="tel:+2348088314848">
+                            +234 808 831 4848
+                        </a>
+                        </div>
+
 
                     </li>
 
@@ -167,8 +174,8 @@ export default function FooterLinks() {
                             className="text-primary"
                         />
 
-                        <a href="mailto:info@ebton.com">
-                            info@ebton.com
+                        <a href="mailto:theinverterspecialist@gmail.com">
+                            Theinverterspecialist<br />@gmail.com
                         </a>
 
                     </li>

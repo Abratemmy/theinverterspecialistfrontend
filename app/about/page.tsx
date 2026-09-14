@@ -114,7 +114,7 @@ export default function AboutPage() {
                             ">
 
                                 <p>
-                                    At Ebton Technology , we believe
+                                    At Ebton Greener Energy Co. (The inverter Specialist) , we believe
                                     that access to reliable electricity should
                                     not be a luxury. Our goal is to provide
                                     dependable solar and backup power
@@ -353,7 +353,7 @@ export default function AboutPage() {
                                 text-[var(--color-text)]
                             ">
 
-                                At Ebton Technology , our mission is to
+                                At Ebton Greener Energy Co. (The inverter Specialist) , our mission is to
                                 accelerate the transition toward sustainable
                                 energy. We believe that solar power and
                                 reliable backup systems can contribute to a
